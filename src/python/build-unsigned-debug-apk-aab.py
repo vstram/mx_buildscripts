@@ -183,15 +183,7 @@ def generate_build(project_file, mx_version, rn_template_version, config_file, r
         return False
         
     print_color('Build AAB: Done!', C_SUCCESS)
-
-    # Cleans the node_modules directory  with: npx rimraf node_modules - see https://sebhastian.com/remove-node-modules/
-    print_section(
-        "Cleans the node_modules directory  with: npx rimraf node_modules")
-    npx_install_cli = f'{node_exe} D:\\bin\\nodejs\\node_modules\\npm\\bin\\npx-cli.js'
-    npx_rimraf_command = f'{npx_install_cli} rimraf node_modules'
-    os.chdir(rn_mx_template_folder)
-    subprocess.run(npx_rimraf_command)
-    
+ 
     # Copies the binaries to the given output folder
     print_section(f"The output are being copied now to the specified folder: {output_folder}")
     apk_filename = 'app-appstore-debug.apk'
