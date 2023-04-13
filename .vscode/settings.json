@@ -4,6 +4,7 @@
         "buildscripts",
         "gradlew",
         "mxbuild",
+        "nativeapp",
         "rimraf",
         "vstram"
     ]

@@ -7,6 +7,8 @@ import time
 from zipfile import ZipFile
 from optparse import OptionParser
 
+from mendix.process_config import ProcessConfig
+
 
 C_ERROR = '\033[91m'
 C_SUCCESS = '\33[32m'
@@ -23,7 +25,8 @@ def print_color(message, color_code = C_INFO):
     print(color_code + message + C_END)
 
 
-def generate_build(project_file, mx_version, rn_template_version, config_file, release_number, output_folder):
+def generate_build(project_file, mx_version, rn_template_version, config_file, release_number, output_folder,
+                   app_identifier, app_name, app_version, build_number, runtime_url):
     if not os.path.exists(project_file):
         print_color(
             f"ERROR: The given MPR project file name '{project_file}' does't not exits!", C_ERROR)
@@ -47,10 +50,15 @@ def generate_build(project_file, mx_version, rn_template_version, config_file, r
         print_color(f"ERROR: 'MENDIX_HOME' environment variable is not defined!", C_ERROR)
         return False
 
+    # Check parameters
     if not os.path.exists(config_file):
         print_color(
             f"ERROR: The given Config Json file '{config_file}' does't not exit!", C_ERROR)
         return False
+    if runtime_url == None:
+        print_color(
+            f"ERROR: The parameter 'runtime_url' is required!", C_ERROR)
+        return False    
 
     # Checks the working directory. It's a sub-directory under project directory called 'build'. If already exists, deletes if necessary.
     project_path = os.path.dirname(project_file)
@@ -74,11 +82,11 @@ def generate_build(project_file, mx_version, rn_template_version, config_file, r
         working_directory, f"native-template-{rn_template_version.lstrip('v')}")
 
     if os.path.exists(working_directory):
-        print_section(f'Removing the working directory: {working_directory}')
+        print_section(f'Removing the working directory: {working_directory} ...')
         shutil.rmtree(working_directory, ignore_errors=True)
         
     if os.path.exists(deployment_directory):
-        print_section(f'Removing the deployment directory: {deployment_directory}')
+        print_section(f'Removing the deployment directory: {deployment_directory} ...')
         shutil.rmtree(working_directory, ignore_errors=True)
 
     # Recreates the working directory
@@ -133,14 +141,18 @@ def generate_build(project_file, mx_version, rn_template_version, config_file, r
     os.chdir(rn_mx_template_folder)
     print_color(f'Current working directory: {rn_mx_template_folder}')
 
-    # Copies the config.json file
-    print_section('Copies the config.json file')
-    print_color(
-        f'Copying the Config Json from: "{config_file}" to "{rn_mx_template_folder}"')
-    copied_file = shutil.copy(config_file, rn_mx_template_folder)
-
-    # Ensures that the Config Json file has the name 'config.json'
-    os.rename(copied_file, os.path.join(rn_mx_template_folder, 'config.json'))
+    # Handles the config.json file
+    print_section('Handles the config.json file')
+    print_color(f'Generating the Config Json from the given template')
+    pc = ProcessConfig(
+            config_filepath = config_file, 
+            app_identifier = app_identifier, 
+            app_name = app_name, 
+            app_version = app_version, 
+            build_number = build_number, 
+            runtime_url = runtime_url
+        )
+    pc.write(output_filepath=os.path.join(rn_mx_template_folder, 'config.json'))
 
     # Executes the NodeJS commands in the RN template folder
     print_section("Executes the NodeJS commands in the RN template folder")
@@ -211,16 +223,26 @@ def generate_build(project_file, mx_version, rn_template_version, config_file, r
 if __name__ == '__main__':
     usage = "\n\n\tBasic usage: python gen_apk_aab.py [options] mpr_project_filename"
     parser = OptionParser(usage=usage)
-    parser.add_option("-n", "--release-number", dest="release_number",
+    parser.add_option("-r", "--release-number", dest="release_number",
                       default='1.0.0', help="Release Number")
     parser.add_option("-m", "--mx-version", dest="mx_version",
                       default='9.18.5.3736', help="Mendix Version")
     parser.add_option("-t", "--rn-template-version", dest="rn_template_version",
                       default='v6.3.5', help="React Native Template version")
     parser.add_option("-c", "--config-file", dest="config_file",
-                      default=None, help="The Json Config file fullpath")
+                      default=None, help="The template Config Json file fullpath")
     parser.add_option("-o", "--output-folder", dest="output_folder", default=None,
                       help="The output folder in which the binaries APK and AAB should be moved to")
+    parser.add_option("-i", "--app_identifier", dest="app_identifier", default='myapp.nativeapp',
+                      help="The application id used to uniquely identify the application")
+    parser.add_option("-n", "--app_name", dest="app_name", default='NativeApp',
+                      help="The application name")
+    parser.add_option("-v", "--app_version", dest="app_version", default='1.0.0',
+                      help="The application version")
+    parser.add_option("-b", "--build_number", dest="build_number", default='1',
+                      help="A integer representing the application build number")
+    parser.add_option("-u", "--runtime_url", dest="runtime_url", default=None,
+                      help="A application runtime url server")
 
     (options, args) = parser.parse_args()
 
@@ -236,16 +258,23 @@ if __name__ == '__main__':
         rn_template_version = options.rn_template_version
         config_file = options.config_file
         output_folder = options.output_folder
+        app_identifier = options.app_identifier
+        app_name = options.app_name
+        app_version = options.app_version
+        build_number = options.build_number
+        runtime_url = options.runtime_url
+        
 
         # Sample usage:
-        # python H:\work\vstram\mx_buildscripts\src\python\build-unsigned-debug-apk-aab.py H:\work\vstram\NativeApp01-main\NativeApp01.mpr -c H:\work\vstram\NativeApp01-main\build_scripts\sample_config.json -o H:\work\vstram\NativeApp01-main\output -m 9.18.5.3736 -t v6.3.5
-        # python H:\work\vstram\mx_buildscripts\src\python\build-unsigned-debug-apk-aab.py D:\temp\NativeApp02\NativeApp02.mpr -c H:\work\vstram\mx_buildscripts\src\mendix\template_config.json -o D:\temp\NativeApp02\output -m 9.24.0.2965 -t v7.0.0
+        # python H:\work\vstram\mx_buildscripts\src\python\build-unsigned-debug-apk-aab.py D:\temp\NativeApp02\NativeApp02.mpr -c H:\work\vstram\mx_buildscripts\src\mendix\template_config.json -o D:\temp\NativeApp02\output -m 9.24.0.2965 -t v7.0.0 -u http://192.168.0.42:8080
 
         start = time.time()
         print_section(
             "Starting the Script to generate the output for your project...")
         gen_build_result = generate_build(mpr_project_filename, mx_version,
-                       rn_template_version, config_file, release_number, output_folder)
+                       rn_template_version, config_file, release_number, output_folder,
+                       app_identifier, app_name, app_version, build_number, runtime_url)
+        
         if gen_build_result:
             print_color('BUILD SUCCESSFUL!', C_SUCCESS)
         else:
