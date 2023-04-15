@@ -9,14 +9,14 @@ from optparse import OptionParser
 
 from mendix.process_config import ProcessConfig
 
-
+# Color codes --------------------------------------------------------------------------------------
 C_ERROR = '\033[91m'
 C_SUCCESS = '\33[32m'
 C_WARNING = '\033[93m'
 C_INFO = '\033[94m'
 C_END = '\033[0m'
 
-
+# Auxiliary Print Functions ------------------------------------------------------------------------
 def print_section(message, cols=80):
     print('*' * cols)
     print(C_INFO + message + C_END)
@@ -24,7 +24,7 @@ def print_section(message, cols=80):
 def print_color(message, color_code = C_INFO):
     print(color_code + message + C_END)
 
-
+# Build Function -----------------------------------------------------------------------------------
 def generate_build(project_file, mx_version, rn_template_version, config_file, release_number, output_folder,
                    app_identifier, app_name, app_version, build_number, runtime_url):
     if not os.path.exists(project_file):
@@ -60,7 +60,8 @@ def generate_build(project_file, mx_version, rn_template_version, config_file, r
             f"ERROR: The parameter 'runtime_url' is required!", C_ERROR)
         return False    
 
-    # Checks the working directory. It's a sub-directory under project directory called 'build'. If already exists, deletes if necessary.
+    # Checks the working directory. It's a sub-directory under project directory called 'build'. 
+    # # If already exists, deletes if necessary.
     project_path = os.path.dirname(project_file)
     working_directory = os.path.join(project_path, 'build')
     deployment_directory = os.path.join(project_path, 'deployment')
@@ -221,7 +222,7 @@ def generate_build(project_file, mx_version, rn_template_version, config_file, r
 
 
 if __name__ == '__main__':
-    usage = "\n\n\tBasic usage: python gen_apk_aab.py [options] mpr_project_filename"
+    usage = "\n\n\tBasic usage: python build-unsigned-debug-apk-aab.py [options] mpr_project_filename"
     parser = OptionParser(usage=usage)
     parser.add_option("-r", "--release-number", dest="release_number",
                       default='1.0.0', help="Release Number")
@@ -240,9 +241,9 @@ if __name__ == '__main__':
     parser.add_option("-v", "--app_version", dest="app_version", default='1.0.0',
                       help="The application version")
     parser.add_option("-b", "--build_number", dest="build_number", default='1',
-                      help="A integer representing the application build number")
+                      help="The integer representing the application build number")
     parser.add_option("-u", "--runtime_url", dest="runtime_url", default=None,
-                      help="A application runtime url server")
+                      help="The application runtime url server")
 
     (options, args) = parser.parse_args()
 
@@ -266,7 +267,7 @@ if __name__ == '__main__':
         
 
         # Sample usage:
-        # python H:\work\vstram\mx_buildscripts\src\python\build-unsigned-debug-apk-aab.py D:\temp\NativeApp02\NativeApp02.mpr -c H:\work\vstram\mx_buildscripts\src\mendix\template_config.json -o D:\temp\NativeApp02\output -m 9.24.0.2965 -t v7.0.0 -u http://192.168.0.42:8080
+        # python H:\work\vstram\mx_buildscripts\src\python\build-unsigned-debug-apk-aab.py D:\temp\NativeApp02\NativeApp02.mpr -c H:\work\vstram\mx_buildscripts\src\mendix\template_config.json -o D:\temp\NativeApp02\output -m 9.24.0.2965 -t v7.0.0 -u http://192.168.0.51:8080
 
         start = time.time()
         print_section(
