@@ -158,7 +158,7 @@ def generate_build(project_file, mx_version, rn_template_version, config_file, r
     # Executes the NodeJS commands in the RN template folder
     print_section("Executes the NodeJS commands in the RN template folder")
     node_exe = f'{node_home}\\node.exe'
-    npm_install_cli = f'{node_exe} D:\\bin\\nodejs\\node_modules\\npm\\bin\\npm-cli.js'
+    npm_install_cli = f'{node_exe} {node_home}\\node_modules\\npm\\bin\\npm-cli.js'
     npm_install_command = f'{npm_install_cli} install'
     try:
         print_color(f'Executing: {npm_install_command}', C_WARNING)
